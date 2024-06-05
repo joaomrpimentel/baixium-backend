@@ -23,3 +23,5 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "MinimalAPI.dll"]
+
+LABEL org.opencontainer.image.source https://github.com/joaomrpimentel/Baixium-Backend
