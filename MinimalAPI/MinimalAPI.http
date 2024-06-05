@@ -1,0 +1,13 @@
+﻿@MinimalAPI_HostAddress = https://localhost:32768
+
+GET {{MinimalAPI_HostAddress}}/articles/
+
+###
+
+POST {{MinimalAPI_HostAddress}}/articles/
+Content-Type: application/json
+
+{
+  "title":"PAULO SERGIO",
+  "description": "GRANDE JOB MARKET"
+}
