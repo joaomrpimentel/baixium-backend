@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 // modules
 
@@ -14,8 +15,9 @@ namespace MinimalAPI
             builder.Services.AddDbContext<ContextDb>(opt => opt.UseInMemoryDatabase("db"));
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddControllers();
             // Authorization
-            builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+            builder.Services.AddIdentityApiEndpoints<AppUser>()
                 .AddEntityFrameworkStores<ContextDb>();
 
             builder.Services.AddAuthorization();
@@ -28,52 +30,10 @@ namespace MinimalAPI
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            app.MapControllers();
 
             // Authentication Mapgroup
-            app.MapGroup("/identity").MapIdentityApi<IdentityUser>();
-
-            // Mapgroups:
-
-            var user = app.MapGroup("/User");
-            user.MapGet("/", async (ContextDb db) =>
-                await db.Users.ToListAsync());
-            user.MapGet("/{id}", async (int id, ContextDb db) =>
-                await db.Users.FindAsync(id)
-                    is User user
-                    ? Results.Ok(user)
-                    : Results.NotFound());
-
-            user.MapPost("/", async (User user, ContextDb db) =>
-            {
-                db.Users.Add(user);
-                await db.SaveChangesAsync();
-                return Results.Created($"/user/{user.Id}", user);
-            });
-
-            user.MapPut("/{id}", async (int id, User inputUser, ContextDb db) =>
-            {
-                var user = await db.Users.FindAsync(id);
-                if (user is null) return Results.NotFound();
-                user.Nome = inputUser.Nome;
-                user.createdAt = inputUser.createdAt;
-                user.avatarURl = inputUser.avatarURl;
-                user.Email = inputUser.Email;
-                user.Description = inputUser.Description;
-                await db.SaveChangesAsync();
-                return Results.NoContent();
-            });
-
-            user.MapDelete("/{id}", async (int id, ContextDb db) =>
-            {
-                if (await db.Users.FindAsync(id) is User user)
-                {
-                    db.Users.Remove(user);
-                    await db.SaveChangesAsync();
-                    return Results.NoContent();
-                }
-
-                return Results.NotFound();
-            });
+            app.MapGroup("/identity").MapIdentityApi<AppUser>();
 
             var article = app.MapGroup("/Article");
             article.MapGet("/", async (ContextDb db) =>
@@ -115,8 +75,6 @@ namespace MinimalAPI
 
                 return Results.NotFound();
             });
-
-
 
             app.MapGet("/", () => "Hello World!");
             app.Run();
