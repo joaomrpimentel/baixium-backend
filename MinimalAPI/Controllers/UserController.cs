@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using MinimalAPI;
+using MinimalAPI.Models;
 
 namespace MinimalAPI
 {
@@ -9,10 +9,10 @@ namespace MinimalAPI
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly UserManager<AppUser> userManager;
-        private readonly SignInManager<AppUser> signInManager;
+        private readonly UserManager<User> userManager;
+        private readonly SignInManager<User> signInManager;
 
-        public UserController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
+        public UserController(UserManager<User> userManager, SignInManager<User> signInManager)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -22,7 +22,7 @@ namespace MinimalAPI
         [HttpPost("add-user")]
         public async Task<IActionResult> Register(RegisterModel model)
         {
-            var user = new AppUser()
+            var user = new User()
             {
                 Name = model.Name,
                 Email = model.Email,

@@ -1,0 +1,60 @@
+﻿using Microsoft.EntityFrameworkCore;
+using MinimalAPI.Dtos;
+using MinimalAPI.Models;
+
+namespace MinimalAPI.Endpoints
+{
+    public static class Articles
+    {
+        public static void ArticleEndpoints(this IEndpointRouteBuilder routes)
+        {
+            var article = routes.MapGroup("/articles");
+            article.MapGet("/", async (ContextDb db) =>
+            await db.Articles.ToListAsync());
+            article.MapGet("/{id}", async (int id, ContextDb db) =>
+                await db.Articles.FindAsync(id)
+                    is Article article
+                    ? Results.Ok(article)
+                    : Results.NotFound());
+
+            article.MapPost("/", async (CreateArticleDTO cretateArticleDTO, ContextDb db) =>
+            {
+                var newArticle = new Article
+                {
+
+                    Title = cretateArticleDTO.Title,
+                    Content = cretateArticleDTO.Content
+                };
+
+                db.Articles.Add(newArticle);
+                await db.SaveChangesAsync();
+                return Results.Created($"/articles/{newArticle.Id}", article);
+            });
+
+            article.MapPut("/{id}", async (int id, Article inputArticle, ContextDb db) =>
+            {
+                var article = await db.Articles.FindAsync(id);
+                if (article is null) return Results.NotFound();
+                article.createdAt = inputArticle.createdAt;
+                article.Title = inputArticle.Title;
+                article.Content = inputArticle.Content;
+                article.Likes = inputArticle.Likes;
+                article.Tags = inputArticle.Tags;
+                await db.SaveChangesAsync();
+                return Results.NoContent();
+            });
+
+            article.MapDelete("/{id}", async (int id, ContextDb db) =>
+            {
+                if (await db.Articles.FindAsync(id) is Article article)
+                {
+                    db.Articles.Remove(article);
+                    await db.SaveChangesAsync();
+                    return Results.NoContent();
+                }
+
+                return Results.NotFound();
+            });
+        }
+    }
+}

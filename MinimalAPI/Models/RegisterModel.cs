@@ -1,4 +1,4 @@
-﻿namespace MinimalAPI
+﻿namespace MinimalAPI.Models
 {
     public class RegisterModel
     {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
-namespace MinimalAPI
+namespace MinimalAPI.Models
 {
-    public class AppUser : IdentityUser
+    public class User : IdentityUser
     {
         public string? Name { get; set; }
         public string? AvatarURL { get; set; }
