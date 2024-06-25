@@ -32,5 +32,8 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}
 
+      - name: Verify Docker image
+        run: docker pull ghcr.io/${{ github.repository }}:latest
+
       - name: Logout from GitHub Container Registry
         run: docker logout ghcr.io
