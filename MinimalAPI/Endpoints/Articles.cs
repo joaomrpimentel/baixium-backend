@@ -11,7 +11,9 @@ namespace MinimalAPI.Endpoints
             var article = routes.MapGroup("/articles");
             article.MapGet("/", async (ContextDb db) =>
             await db.Articles.ToListAsync());
-            article.MapGet("/{id}", async (int id, ContextDb db) =>
+
+
+            article.MapGet("/{id}", async (string id, ContextDb db) =>
                 await db.Articles.FindAsync(id)
                     is Article article
                     ? Results.Ok(article)
@@ -23,7 +25,8 @@ namespace MinimalAPI.Endpoints
                 {
 
                     Title = cretateArticleDTO.Title,
-                    Content = cretateArticleDTO.Content
+                    Content = cretateArticleDTO.Content,
+                    userId = cretateArticleDTO.UserId.ToString()
                 };
 
                 db.Articles.Add(newArticle);
@@ -31,7 +34,7 @@ namespace MinimalAPI.Endpoints
                 return Results.Created($"/articles/{newArticle.Id}", article);
             });
 
-            article.MapPut("/{id}", async (int id, Article inputArticle, ContextDb db) =>
+            article.MapPut("/{id}", async (string id, Article inputArticle, ContextDb db) =>
             {
                 var article = await db.Articles.FindAsync(id);
                 if (article is null) return Results.NotFound();
@@ -44,7 +47,7 @@ namespace MinimalAPI.Endpoints
                 return Results.NoContent();
             });
 
-            article.MapDelete("/{id}", async (int id, ContextDb db) =>
+            article.MapDelete("/{id}", async (string id, ContextDb db) =>
             {
                 if (await db.Articles.FindAsync(id) is Article article)
                 {
@@ -55,6 +58,21 @@ namespace MinimalAPI.Endpoints
 
                 return Results.NotFound();
             });
+
+            article.MapPut("{id}/like", async (string id, ContextDb db) =>
+            {
+                var article = await db.Articles.FirstOrDefaultAsync(a => a.Id.ToString() == id);
+                if (article == null)
+                {
+                    return Results.NotFound();
+                }
+
+                article.Likes++;
+                await db.SaveChangesAsync();
+
+                return Results.Ok();
+            }
+           );
         }
     }
 }

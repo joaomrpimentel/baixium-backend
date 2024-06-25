@@ -5,7 +5,7 @@ using MinimalAPI.Models;
 
 namespace MinimalAPI
 {
-    [Route("api/[controller]")]
+    [Route("/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -19,7 +19,7 @@ namespace MinimalAPI
         }
 
 
-        [HttpPost("add-user")]
+        [HttpPost("")]
         public async Task<IActionResult> Register(RegisterModel model)
         {
             var user = new User()
@@ -35,23 +35,6 @@ namespace MinimalAPI
             if (result.Succeeded)
                 return Ok("Registration made successfully");
 
-            return BadRequest("Error occured");
-        }
-
-
-        [HttpPost("login")]
-        public async Task<IActionResult> Login(string email, string password)
-        {
-            var signInResult = await signInManager.PasswordSignInAsync(
-                  userName: email!,
-                  password: password!,
-                  isPersistent: false,
-                  lockoutOnFailure: false
-                  );
-            if (signInResult.Succeeded)
-            {
-                return Ok("You are successfully logged in");
-            }
             return BadRequest("Error occured");
         }
     }

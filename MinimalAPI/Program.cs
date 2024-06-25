@@ -26,12 +26,7 @@ namespace MinimalAPI
             builder.Services.AddAuthorization();
             // End Authorization
 
-
-
-
             var app = builder.Build();
-
-
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -50,9 +45,10 @@ namespace MinimalAPI
 
 
             // Authentication Mapgroup
-            app.MapGroup("/identity").MapIdentityApi<User>();
+            app.MapGroup("/users").CustomMapIdentityApi<User>();
 
             app.ArticleEndpoints();
+            app.UsersEndpoints();
 
             app.MapGet("/", () => "Hello World!");
             app.Run();
