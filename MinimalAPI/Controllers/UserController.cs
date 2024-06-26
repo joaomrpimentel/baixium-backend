@@ -27,7 +27,7 @@ namespace MinimalAPI
                 Name = model.Name,
                 Email = model.Email,
                 Description = model.Description,
-                AvatarURL = model.avatarURl,
+                AvatarURL = model.avatarURL,
                 UserName = model.Email,
                 PasswordHash = model.Password,
             };

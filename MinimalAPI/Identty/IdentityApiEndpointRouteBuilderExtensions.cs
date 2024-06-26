@@ -14,9 +14,12 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using MinimalAPI;
+using MinimalAPI.Models;
 
 namespace Microsoft.AspNetCore.Routing;
 
@@ -54,61 +57,69 @@ public static class IdentityApiEndpointRouteBuilderExtensions
 
         // NOTE: We cannot inject UserManager<TUser> directly because the TUser generic parameter is currently unsupported by RDG.
         // https://github.com/dotnet/aspnetcore/issues/47338
-        routeGroup.MapPost("/register", async Task<Results<Ok<TUser>, ValidationProblem>>
-            ([FromBody] RegisterRequest registration, HttpContext context, [FromServices] IServiceProvider sp) =>
+        routeGroup.MapPost("/register", async Task<Results<Ok<User>, ValidationProblem>>
+            ([FromBody] RegisterModel registration, HttpContext context, [FromServices] IServiceProvider sp) =>
         {
-            var userManager = sp.GetRequiredService<UserManager<TUser>>();
+            var userManager = sp.GetRequiredService<UserManager<User>>();
 
             if (!userManager.SupportsUserEmail)
             {
                 throw new NotSupportedException($"{nameof(CustomMapIdentityApi)} requires a user store with email support.");
             }
 
-            var userStore = sp.GetRequiredService<IUserStore<TUser>>();
-            var emailStore = (IUserEmailStore<TUser>)userStore;
+            var userStore = sp.GetRequiredService<IUserStore<User>>();
+            var emailStore = (IUserEmailStore<User>)userStore;
             var email = registration.Email;
-
-
-            
-
-            var user = new TUser();
-            await userStore.SetUserNameAsync(user, email, CancellationToken.None);
+            var user = new User
+                {
+                UserName = registration.Email,
+                Email = registration.Email,
+                Name = registration.Name,
+                AvatarURL = registration.AvatarURL,
+                Description = registration.Description
+                };
+            await userStore.SetUserNameAsync(user, registration.Email, CancellationToken.None);
             await emailStore.SetEmailAsync(user, email, CancellationToken.None);
             var result = await userManager.CreateAsync(user, registration.Password);
+
+            if (!result.Succeeded)
+            {
+                return TypedResults.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
+            }
 
             return TypedResults.Ok(user);
         });
 
-        routeGroup.MapPost("/login", async Task<Results<Ok<TUser>, EmptyHttpResult, ProblemHttpResult>>
-            ([FromBody] LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp) =>
+
+
+        routeGroup.MapPost("/login", async Task<Results<Ok<User>, ProblemHttpResult>>
+    ([FromBody] LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp) =>
         {
-            var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
-            var userManager = sp.GetRequiredService<UserManager<TUser>>();
+            var signInManager = sp.GetRequiredService<SignInManager<User>>();
+            var userManager = sp.GetRequiredService<UserManager<User>>();
 
             var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
             var isPersistent = (useCookies == true) && (useSessionCookies != true);
-            signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
+   
 
             var result = await signInManager.PasswordSignInAsync(login.Email, login.Password, isPersistent, lockoutOnFailure: true);
 
-
             if (!result.Succeeded)
             {
-                return TypedResults.Problem(result.ToString(), statusCode: StatusCodes.Status401Unauthorized);
+                return TypedResults.Problem("Invalid login attempt", statusCode: StatusCodes.Status401Unauthorized);
             }
 
-            // Fetch the user details after successful sign-in
             var user = await userManager.FindByEmailAsync(login.Email);
             if (user == null)
             {
                 return TypedResults.Problem("User not found", statusCode: StatusCodes.Status404NotFound);
             }
 
-            // Return the user details
             return TypedResults.Ok(user);
         });
 
         return new IdentityEndpointsConventionBuilder(routeGroup);
+
 
     }
 

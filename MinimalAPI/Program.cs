@@ -32,7 +32,6 @@ namespace MinimalAPI
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            app.MapControllers();
 
             // CORS
             builder.Services.AddCors();
@@ -43,12 +42,13 @@ namespace MinimalAPI
                 .AllowAnyHeader()
                );
 
+            
 
             // Authentication Mapgroup
             app.MapGroup("/users").CustomMapIdentityApi<User>();
-
-            app.ArticleEndpoints();
             app.UsersEndpoints();
+            app.ArticleEndpoints();
+            
 
             app.MapGet("/", () => "Hello World!");
             app.Run();

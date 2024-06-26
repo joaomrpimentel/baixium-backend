@@ -6,7 +6,7 @@ namespace MinimalAPI.Endpoints
 {
     public static class Users
     {
-        public static void UsersEndpoints(this IEndpointRouteBuilder routes)
+        public static async void UsersEndpoints(this IEndpointRouteBuilder routes)
         {
             var user = routes.MapGroup("/users");
             user.MapGet("/", async (ContextDb db) =>
@@ -19,7 +19,26 @@ namespace MinimalAPI.Endpoints
                 ).ToListAsync()
             );
 
-           
+            user.MapPut("{id}", async (string id, UpdateUserDTO userUpdate, ContextDb db) =>
+            {
+                var user = await db.Users.FindAsync(id);
+                if (user is null) return Results.NotFound();
+                user.Name = userUpdate.Name;
+                user.Description = userUpdate.Description;
+                user.AvatarURL = userUpdate.AvatarURL;
+                await db.SaveChangesAsync();
+                return Results.Ok();
+            }
+            );
+
+            user.MapDelete("{id}", async (string id, ContextDb db) =>
+            {
+                var user = await db.Users.FindAsync(id);
+                if (user is null) return Results.NotFound();
+                db.Users.Remove(user);
+                await db.SaveChangesAsync();
+                return Results.NoContent();
+            });
         }
     }
 }

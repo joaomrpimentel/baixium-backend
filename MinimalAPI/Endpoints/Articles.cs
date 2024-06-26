@@ -14,7 +14,7 @@ namespace MinimalAPI.Endpoints
 
 
             article.MapGet("/{id}", async (string id, ContextDb db) =>
-                await db.Articles.FindAsync(id)
+                await db.Articles.FindAsync(new Guid(id))
                     is Article article
                     ? Results.Ok(article)
                     : Results.NotFound());
@@ -34,22 +34,19 @@ namespace MinimalAPI.Endpoints
                 return Results.Created($"/articles/{newArticle.Id}", article);
             });
 
-            article.MapPut("/{id}", async (string id, Article inputArticle, ContextDb db) =>
+            article.MapPut("/{id}", async (string id, UpdateArticleDTO inputArticle, ContextDb db) =>
             {
-                var article = await db.Articles.FindAsync(id);
+                var article = await db.Articles.FindAsync(new Guid(id));
                 if (article is null) return Results.NotFound();
-                article.createdAt = inputArticle.createdAt;
                 article.Title = inputArticle.Title;
                 article.Content = inputArticle.Content;
-                article.Likes = inputArticle.Likes;
-                article.Tags = inputArticle.Tags;
                 await db.SaveChangesAsync();
                 return Results.NoContent();
             });
 
             article.MapDelete("/{id}", async (string id, ContextDb db) =>
             {
-                if (await db.Articles.FindAsync(id) is Article article)
+                if (await db.Articles.FindAsync(new Guid(id)) is Article article)
                 {
                     db.Articles.Remove(article);
                     await db.SaveChangesAsync();
