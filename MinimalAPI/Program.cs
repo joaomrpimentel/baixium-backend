@@ -15,7 +15,12 @@ namespace MinimalAPI
         private static void Main(String[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.Services.AddDbContext<ContextDb>(opt => opt.UseInMemoryDatabase("db"));
+
+            // Database
+            builder.Services.AddDbContext<ContextDb>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddControllers();
